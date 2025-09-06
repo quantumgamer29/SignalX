@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Indian Railways Login</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: rgba(0, 102, 204, 0.9);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      width: 420px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .logo {
+      width: 200px;
+      margin-bottom: 20px;
+      filter: brightness(1.2) saturate(1.5);
+    }
+
+    h2, h1 {
+      color: #ffffff;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #f0f0f0;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      background-color: #003366;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #002244;
+    }
+
+    .info {
+      margin-top: 20px;
+      font-size: 16px;
+      text-align: left;
+      color: #fff;
+    }
+
+    .clock {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 16px;
+      color: #fff;
+    }
+    .toggle-link {
+        margin-top: 20px;
+        font-size: 14px;
+    }
+    .toggle-link a {
+        color: #f0f0f0;
+        font-weight: bold;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="login-container">
+    <img src="indian_railways.png" alt="Indian Railways Logo" class="logo">
+    <h2>INDIAN RAILWAYS LOGIN</h2>
+    <form id="login-form">
+      <label for="login-userid">User ID</label>
+      <input type="text" id="login-userid" required placeholder="Enter User ID" />
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" required placeholder="Enter Password" />
+      <button type="submit">Login</button>
+    </form>
+    <p class="toggle-link">Don't have an account? <a id="show-signup">Sign Up</a></p>
+  </div>
+
+  <div class="container" id="signup-container" style="display:none;">
+    <img src="indian_railways.png" alt="Indian Railways Logo" class="logo">
+    <h2>CREATE ACCOUNT</h2>
+    <form id="signup-form">
+      <label for="signup-userid">User ID</label>
+      <input type="text" id="signup-userid" required placeholder="Choose a User ID" />
+      <label for="signup-password">Password</label>
+      <input type="password" id="signup-password" required placeholder="Create a Password" />
+       <label for="confirm-password">Confirm Password</label>
+      <input type="password" id="confirm-password" required placeholder="Confirm Password" />
+      <button type="submit">Sign Up</button>
+    </form>
+    <p class="toggle-link">Already have an account? <a id="show-login">Login</a></p>
+  </div>
+
+  <div class="container" id="dashboard" style="display:none;">
+    <img src="indian_railways.png" alt="Indian Railways Logo" class="logo">
+    <h1 id="welcome-message">Welcome</h1>
+    <div class="info">
+      <p><strong>Total Work Hours:</strong> <span id="total-hours">0h 0m 0s</span></p>
+      <p><strong>Today's Work Hours:</strong> <span id="today-hours">0h 0m 0s</span></p>
+      <p><strong>Total Leaves Taken:</strong> <span id="total-leaves">0</span></p>
+    </div>
+    <button onclick="startShift()">Start Today's Shift</button>
+    <button onclick="endShift()">End Today's Shift</button>
+    <button onclick="applyLeave()">Apply Leave</button>
+    <div class="clock" id="clock"></div>
+  </div>
+
+  <script>
+    const loginContainer = document.getElementById("login-container");
+    const signupContainer = document.getElementById("signup-container");
+    const dashboardContainer = document.getElementById("dashboard");
+    const showSignupBtn = document.getElementById("show-signup");
+    const showLoginBtn = document.getElementById("show-login");
+    
+    let currentUserId = null;
+    let shiftStart = null;
+    let shiftTimer = null;
+    let todaySeconds = 0;
+
+    // --- Toggle between Login and Sign Up forms ---
+    showSignupBtn.addEventListener('click', () => {
+        loginContainer.style.display = 'none';
+        signupContainer.style.display = 'block';
+    });
+
+    showLoginBtn.addEventListener('click', () => {
+        signupContainer.style.display = 'none';
+        loginContainer.style.display = 'block';
+    });
+
+    // --- Data Helper Functions ---
+    function getWorkerData() {
+        const allData = JSON.parse(localStorage.getItem('railwayWorkerData')) || {};
+        if (!allData[currentUserId]) {
+            allData[currentUserId] = {
+                totalSeconds: 0,
+                totalLeaves: 0,
+                leavesThisYear: 0,
+                lastLeaveYear: new Date().getFullYear(),
+                activeShiftStart: null // <-- Stores the start time of a running shift
+            };
+        }
+        return allData;
+    }
+
+    function saveWorkerData(userData) {
+        const allData = getWorkerData();
+        allData[currentUserId] = userData;
+        localStorage.setItem('railwayWorkerData', JSON.stringify(allData));
+    }
+
+    // --- Sign Up Logic ---
+    document.getElementById("signup-form").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const userId = document.getElementById('signup-userid').value;
+        const pass = document.getElementById('signup-password').value;
+        const confirmPass = document.getElementById('confirm-password').value;
+        if (!userId || !pass) { alert("User ID and Password cannot be empty."); return; }
+        if (pass !== confirmPass) { alert("Passwords do not match!"); return; }
+        const users = JSON.parse(localStorage.getItem('railwayUsers')) || {};
+        if (users[userId]) { alert("User ID already exists. Please choose another one."); return; }
+        users[userId] = pass;
+        localStorage.setItem('railwayUsers', JSON.stringify(users));
+        alert("Account created successfully! Please log in.");
+        signupContainer.style.display = 'none';
+        loginContainer.style.display = 'block';
+        document.getElementById("signup-form").reset();
+    });
+
+    // --- Login Logic ---
+    document.getElementById("login-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const userId = document.getElementById('login-userid').value;
+      const pass = document.getElementById('login-password').value;
+      const users = JSON.parse(localStorage.getItem('railwayUsers')) || {};
+
+      if (users[userId] && users[userId] === pass) {
+        currentUserId = userId;
+        const userData = getWorkerData()[currentUserId];
+
+        document.getElementById('total-hours').innerText = formatTime(userData.totalSeconds);
+        document.getElementById('total-leaves').innerText = userData.totalLeaves;
+        todaySeconds = 0;
+        document.getElementById('today-hours').innerText = formatTime(0);
+        
+        loginContainer.style.display = "none";
+        dashboardContainer.style.display = "block";
+        document.getElementById('welcome-message').innerText = `Welcome, ${userId}`;
+
+        // *** FIX: Check for and resume an active shift from a previous session ***
+        if (userData.activeShiftStart) {
+            shiftStart = new Date(userData.activeShiftStart);
+            alert("Resuming active shift from previous session.");
+            startLiveTimer(userData.totalSeconds);
+        }
+
+      } else {
+        alert("Invalid User ID or Password.");
+      }
+    });
+
+    // --- Shared function to start the live counter ---
+    function startLiveTimer(baseTotalSeconds) {
+        if (shiftTimer) clearInterval(shiftTimer); // Clear any existing timer
+        shiftTimer = setInterval(function() {
+            const now = new Date();
+            const diff = Math.floor((now - shiftStart) / 1000);
+            document.getElementById("today-hours").innerText = formatTime(todaySeconds + diff);
+            document.getElementById("total-hours").innerText = formatTime(baseTotalSeconds + diff);
+        }, 1000);
+    }
+
+    function startShift() {
+      if (!shiftStart) {
+        const userData = getWorkerData()[currentUserId];
+        shiftStart = new Date();
+        
+        // *** FIX: Save the shift start time immediately ***
+        userData.activeShiftStart = shiftStart.getTime();
+        saveWorkerData(userData);
+        
+        startLiveTimer(userData.totalSeconds);
+
+        window.open('train_pro.html', '_blank');
+        alert("Shift started! Opening the Rail Dashboard...");
+      } else {
+        alert("Shift is already in progress.");
+      }
+    }
+
+    function endShift() {
+      if (shiftStart) {
+        clearInterval(shiftTimer);
+        shiftTimer = null;
+
+        const shiftEnd = new Date();
+        const diff = Math.floor((shiftEnd - shiftStart) / 1000);
+        todaySeconds += diff;
+        
+        const userData = getWorkerData()[currentUserId];
+        userData.totalSeconds += diff;
+        userData.activeShiftStart = null; // *** FIX: Clear the active shift time ***
+        saveWorkerData(userData);
+
+        shiftStart = null;
+        updateHours();
+        alert("Shift ended! Time recorded.");
+      } else {
+        alert("No shift is currently active.");
+      }
+    }
+
+    function applyLeave() {
+        const userData = getWorkerData()[currentUserId];
+        const currentYear = new Date().getFullYear();
+
+        if (userData.lastLeaveYear !== currentYear) {
+            userData.leavesThisYear = 0;
+            userData.lastLeaveYear = currentYear;
+        }
+
+        if (userData.leavesThisYear >= 40) {
+            alert("Leave application failed: You have already used all 40 leaves for this year.");
+            return;
+        }
+
+        userData.leavesThisYear++;
+        userData.totalLeaves++;
+        
+        saveWorkerData(userData);
+        document.getElementById("total-leaves").innerText = userData.totalLeaves;
+        alert(`Leave applied successfully. You have used ${userData.leavesThisYear} of 40 leaves this year.`);
+    }
+
+    function updateHours() {
+      const userData = getWorkerData()[currentUserId];
+      document.getElementById("total-hours").innerText = formatTime(userData.totalSeconds);
+      document.getElementById("today-hours").innerText = formatTime(todaySeconds);
+    }
+
+    function formatTime(seconds) {
+      let h = Math.floor(seconds / 3600);
+      let m = Math.floor((seconds % 3600) / 60);
+      let s = seconds % 60;
+      return h + "h " + m + "m " + s + "s";
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("clock").innerText =
+        now.toDateString() + " " + now.toLocaleTimeString();
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
