@@ -1,0 +1,71 @@
+IntelliRail: AI-Powered Railway Traffic Management & Simulation Platform
+A fully interactive, browser-based simulation of an AI-controlled railway network, complete with a real-time dashboard, manual override controls, and a worker management portal.
+
+This project was developed as a prototype to demonstrate a modern, AI-driven approach to solving complex railway traffic problems, such as cascading delays and disruption management.
+
+[https://signal-x-lndw.vercel.app] <!-- Replace with your Vercel deployment URL -->
+
+Core Features
+AI Traffic Controller: A smart AI scheduler that proactively manages train traffic, plans overtakes for high-priority trains, and works to minimize delays across the network.
+
+Real-Time Simulation: A visual "digital twin" of a multi-station railway line, showing trains moving, switching tracks, and responding to AI commands in real-time.
+
+Interactive Dashboard: A comprehensive dashboard displaying Key Performance Indicators (KPIs) like Network Efficiency, a live log of all AI/manual decisions, and the real-time status of every active train.
+
+Disruption Simulation: Manually trigger events like bad weather, technical faults, or signal delays to see how the AI responds and mitigates the impact.
+
+Manual Control Mode: A special mode that allows a human controller to take over. You can pause the AI, manually stop/start individual trains, and even order a train to reroute to a different track.
+
+Worker Portal: A complete login/signup system for railway personnel. The dashboard tracks an employee's work hours and manages their yearly leave allowance, with all data saved locally.
+
+Project Structure
+The project is self-contained and runs entirely in the browser.
+
+index.html: The main worker portal. This page handles user login, signup, and the employee dashboard for tracking work hours and leaves.
+
+dashboard.html: The core of the project. This file contains the AI simulation, the visual track layout, and the real-time monitoring dashboard.
+
+train_schedule.js: The dataset that feeds the simulation. You can edit this file to change the number, type, and schedule of trains.
+
+indian_railways.png: The logo asset used across the application.
+
+Getting Started
+No complex setup is required to run this project.
+
+Clone the Repository:
+
+git clone [https://github.com/your-username/your-repository-name.git](https://github.com/your-username/your-repository-name.git)
+
+Navigate to the Directory:
+
+cd your-repository-name
+
+Open in Browser:
+Simply open the index.html file in any modern web browser.
+
+How The AI Works
+The simulation's intelligence is driven by a set of rules coded in JavaScript.
+
+Priority System: Each train type has a base priority (Express > Local > Freight). This priority dynamically increases if a train gets delayed, making it more urgent.
+
+Proactive Overtakes: The AI constantly checks for situations where a high-priority train is catching up to a slower one.
+
+Safe Rerouting: Before ordering an overtake, the AI simulates ahead to ensure the slower train has a valid exit path to rejoin the main line later. This prevents trains from getting trapped.
+
+Fairness Logic: The AI ensures that even the lowest-priority trains (Freight) get a chance to move and are not permanently "starved" of track time by an endless stream of passenger trains.
+
+Technologies Used
+Frontend: HTML5, JavaScript (ES6)
+
+Styling: Tailwind CSS for a responsive, utility-first design.
+
+Mapping: Leaflet.js for the interactive station map.
+
+Icons: Font Awesome for UI icons.
+
+Future Scope
+Backend Integration: Connect the simulation to a proper backend (e.g., Python with Flask/Django) to handle more complex AI/ML models.
+
+Real-Time Data Feed: Integrate with live data from sources like the National Train Enquiry System (NTES) for a true real-world digital twin.
+
+Machine Learning: Implement a machine learning model to predict potential disruptions based on historical data, moving from a rule-based to a predictive AI.
